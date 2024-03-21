@@ -6,6 +6,7 @@ const bodyParser = require('body-parser');
 const dotenv = require('dotenv');
 const session = require('express-session');
 const passport = require('./middleware/auth.middleware');
+const io = socketIO(server);
 
 // Load environment variables from environment file
 dotenv.config();
@@ -44,7 +45,7 @@ app.use(passport.session());
 // route imports
 app.use('/', authRoutes);
 app.use('/home', homeRoutes);
-app.use('/chat', chatRoutes); // Add chat routes
+app.use('/chat', chatRoutes);
 
 // start server
 const PORT = process.env.PORT || 3000;
@@ -52,12 +53,13 @@ const server = app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
 
-// Socket.IO integration
-const io = require('socket.io')(server);
+// real time integration
 io.on('connection', socket => {
-    console.log('New client connected');
-    // Implement Socket.IO logic for handling messages
+    console.log('new client connected');
     socket.on('disconnect', () => {
-        console.log('Client disconnected');
+        console.log('client disconnected');
     });
 });
+
+// include logic for handeling "chat message" event from client in chat routes file
+chatRoutes(io); 
