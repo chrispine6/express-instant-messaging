@@ -1,10 +1,35 @@
 const express = require('express');
 const router = express.Router();
+const Message = require('../models/message.model'); 
 
-router.get('/:userId', (req, res) => {
-    const userId = req.params.userId;
-    // Implement logic to fetch user details by userId and render the chat interface
-    res.render('chat', { userId });
+router.get('/:userId', async (req, res) => {
+    try {
+        const userId = req.params.userId;
+        const messages = await Message.find({ $or: [{ sender: userId }, { recipient: userId }] });
+        res.render('chat', { userId, messages });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Internal Server Error');
+    }
+});
+
+router.post('/:userId/send', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const { content } = req.body;
+
+        const newMessage = new Message({
+            sender: userId,
+            recipient: userId,
+            content: content
+        });
+
+        await newMessage.save();
+        res.redirect(`/chat/${userId}`);
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Internal Server Error');
+    }
 });
 
 module.exports = router;
